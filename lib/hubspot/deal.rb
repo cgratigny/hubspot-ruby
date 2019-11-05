@@ -39,16 +39,26 @@ module Hubspot
         new(response)
       end
 
-      # Associate a deal with a contact or company
+      # Associate a deal with contacts and/or a companies
+      # Will make two calls if both companies and contacts are given
+      # {http://developers.hubspot.com/docs/methods/deals/associate_deal}
+      # Usage
+      # Hubspot::Deal.update_associations!(45146940, [42], [52])
+      def update_associations!(deal_id, company_ids=[], vids=[])
+        associate!(deal_id, company_ids) if company_ids.any?
+        associate!(deal_id, [], vids) if vids.any?
+      end
+
+      # Associate a deal with contacts or companies
       # {http://developers.hubspot.com/docs/methods/deals/associate_deal}
       # Usage
       # Hubspot::Deal.associate!(45146940, [], [52])
+      # If companies and contacts are given, contacts are ignored. Use update_associations! to update both.
       def associate!(deal_id, company_ids=[], vids=[])
         objecttype = company_ids.any? ? 'COMPANY' : 'CONTACT'
         object_ids = (company_ids.any? ? company_ids : vids).join('&id=')
         Hubspot::Connection.put_json(ASSOCIATE_DEAL_PATH, params: { deal_id: deal_id, OBJECTTYPE: objecttype, objectId: object_ids}, body: {})
       end
-
 
       def find(deal_id)
         response = Hubspot::Connection.get_json(DEAL_PATH, { deal_id: deal_id })

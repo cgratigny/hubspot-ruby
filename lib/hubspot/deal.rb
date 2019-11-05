@@ -39,15 +39,15 @@ module Hubspot
         new(response)
       end
 
-       # Associate a deal with a contact or company
-       # {http://developers.hubspot.com/docs/methods/deals/associate_deal}
-       # Usage
-       # Hubspot::Deal.associate!(45146940, [], [52])
-       def associate!(deal_id, company_ids=[], vids=[])
-         objecttype = company_ids.any? ? 'COMPANY' : 'CONTACT'
-         object_ids = (company_ids.any? ? company_ids : vids).join('&id=')
-         Hubspot::Connection.put_json(ASSOCIATE_DEAL_PATH, params: { deal_id: deal_id, OBJECTTYPE: objecttype, objectId: object_ids}, body: {})
-       end
+      # Associate a deal with a contact or company
+      # {http://developers.hubspot.com/docs/methods/deals/associate_deal}
+      # Usage
+      # Hubspot::Deal.associate!(45146940, [], [52])
+      def associate!(deal_id, company_ids=[], vids=[])
+        objecttype = company_ids.any? ? 'COMPANY' : 'CONTACT'
+        object_ids = (company_ids.any? ? company_ids : vids).join('&id=')
+        Hubspot::Connection.put_json(ASSOCIATE_DEAL_PATH, params: { deal_id: deal_id, OBJECTTYPE: objecttype, objectId: object_ids}, body: {})
+      end
 
 
       def find(deal_id)

@@ -10,7 +10,7 @@ describe Hubspot::Deal do
     end
   end
 
-  before{ Hubspot.configure(hapikey: "demo") }
+  before { Hubspot.configure(hapikey: 'demo') }
 
   describe "#initialize" do
     subject{ Hubspot::Deal.new(example_deal_hash) }
@@ -20,7 +20,7 @@ describe Hubspot::Deal do
   end
 
   describe ".create!" do
-    cassette "deal_create"
+    cassette 'deal_create'
     subject { Hubspot::Deal.create!(portal_id, [company_id], [vid], {}) }
     its(:deal_id)     { should_not be_nil }
     its(:portal_id)   { should eql portal_id }
@@ -28,9 +28,71 @@ describe Hubspot::Deal do
     its(:vids)        { should eql [vid]}
   end
 
+  describe ".update_associations!" do
+    cassette 'deal_update_associations'
+    let(:deal) { Hubspot::Deal.create!(portal_id, [], [], { amount: amount }) }
+    let(:company) { create :company }
+    let(:contact) { create :contact }
+
+    subject { Hubspot::Deal.update_associations!(deal.deal_id, [company.id], [contact.id]) }
+
+    it 'associates the deal to the contact and the company' do
+      subject
+      find_deal = Hubspot::Deal.find(deal.deal_id)
+      find_deal.company_ids.should eql [company.id]
+      find_deal.vids.should eql [contact.id]
+    end
+  end
+
+  describe ".associate!" do
+    let(:deal) { Hubspot::Deal.create!(portal_id, [], [], { amount: amount }) }
+    let(:company) { create :company }
+    let(:contact) { create :contact }
+    let(:company_ids) { [company.id] }
+    let(:vids) { [contact.id] }
+
+    subject { Hubspot::Deal.associate!(deal.deal_id, company_ids, vids) }
+
+    context 'when both company and contact are given' do
+      cassette 'deal_associate_both'
+
+      it 'associates the deal only to the the company' do
+        subject
+        find_deal = Hubspot::Deal.find(deal.deal_id)
+        find_deal.company_ids.should eql [company.id]
+        find_deal.vids.should eql []
+      end
+    end
+
+    context 'when only company is given' do
+      cassette 'deal_associate_company'
+      let(:vids) { [] }
+
+      it 'associates the deal only to the the company' do
+        subject
+        find_deal = Hubspot::Deal.find(deal.deal_id)
+        find_deal.company_ids.should eql [company.id]
+        find_deal.vids.should eql []
+      end
+    end
+
+    context 'when only contact is given' do
+      cassette 'deal_associate_contact'
+      let(:company_ids) { [] }
+
+      it 'associates the deal only to the the contact' do
+        subject
+        find_deal = Hubspot::Deal.find(deal.deal_id)
+        # debugger
+        find_deal.company_ids.should eql []
+        find_deal.vids.should eql [contact.id]
+      end
+    end
+  end
+
   describe ".find" do
-    cassette "deal_find"
-    let(:deal) {Hubspot::Deal.create!(portal_id, [company_id], [vid], { amount: amount})}
+    cassette 'deal_find'
+    let(:deal) { Hubspot::Deal.create!(portal_id, [company_id], [vid], { amount: amount }) }
 
     it 'must find by the deal id' do
       find_deal = Hubspot::Deal.find(deal.deal_id)
